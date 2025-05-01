@@ -57,24 +57,30 @@ while True:
             # Lấy toạ độ bounding box (sau khi scale)
             x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
 
+            # Lấy confidence score
+            confidence = box.conf[0].cpu().numpy()
+
             # Chuyển toạ độ về kích thước gốc
             x1 = int(x1 / scale_factor)
             y1 = int(y1 / scale_factor)
             x2 = int(x2 / scale_factor)
             y2 = int(y2 / scale_factor)
 
-            # # Cắt ảnh từ frame gốc
+            # Cắt ảnh từ frame gốc
             cropped_img = frame[y1:y2, x1:x2]
 
-            # # Kiểm tra để tránh lỗi khi toạ độ sai
-            # if cropped_img.size > 0:
-            #     license_text, score = read_license_plate(cropped_img)
+            # Kiểm tra để tránh lỗi khi toạ độ sai
+            if cropped_img.size > 0 and confidence > 0.5:
+                license_plate_text, license_plate_text_score = read_license_plate(cropped_img)
 
-            #     if license_text and score > 0.5:
-            #         cv2.putText(frame, license_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 
-            #                     0.9, (0, 255, 0), 2, cv2.LINE_AA)
-            # Vẽ bounding box
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                if license_plate_text and license_plate_text_score > 0.3:
+                    cv2.putText(frame, license_plate_text, (x1, y1 - 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                                1.9, (0, 255, 0), 2, cv2.LINE_AA)
+                label = f"Conf: {confidence:.2f}"
+                cv2.putText(frame, label, (x1, y1 - 25), cv2.FONT_HERSHEY_SIMPLEX, 
+                        0.6, (255, 255, 0), 2, cv2.LINE_AA)
+                # Vẽ bounding box
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     # Resize frame để hiển thị
     h, w, _ = frame.shape
